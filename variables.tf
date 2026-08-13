@@ -120,9 +120,9 @@ variable "master_password" {
 }
 
 variable "iam_database_authentication_enabled" {
-  description = "Enable IAM database authentication"
+  description = "Enable IAM database authentication (harmless when unused; password auth keeps working)"
   type        = bool
-  default     = false
+  default     = true
 }
 
 # --- Networking ------------------------------------------------------------
@@ -230,6 +230,23 @@ variable "performance_insights_retention_period" {
   description = "Performance Insights retention in days (7, 465 or 731)"
   type        = number
   default     = 7
+}
+
+variable "performance_insights_kms_key_id" {
+  description = "KMS key ARN to encrypt Performance Insights data. If null, the AWS-managed key is used. Cannot be changed after PI is first enabled on an instance"
+  type        = string
+  default     = null
+}
+
+variable "enhanced_monitoring_interval" {
+  description = "Enhanced Monitoring interval in seconds (0 disables it). The monitoring IAM role is created automatically"
+  type        = number
+  default     = 60
+
+  validation {
+    condition     = contains([0, 1, 5, 10, 15, 30, 60], var.enhanced_monitoring_interval)
+    error_message = "enhanced_monitoring_interval must be one of: 0, 1, 5, 10, 15, 30, 60."
+  }
 }
 
 # --- Tags ------------------------------------------------------------------

@@ -32,6 +32,8 @@ resource "aws_rds_cluster_parameter_group" "this" {
 }
 
 resource "aws_rds_cluster" "this" {
+  # checkov:skip=CKV2_AWS_8:AWS Backup plans are an organization-level concern managed outside this module; the cluster has native backups (backup_retention_period, default 30 days) and a final snapshot by default
+  # checkov:skip=CKV2_AWS_27:Query logging is available via cluster_parameters (log_statement, log_min_duration_statement). Not enabled by default: log_statement=all impacts performance and may capture sensitive data in logs
   cluster_identifier = var.cluster_name
   engine             = "aurora-postgresql"
   engine_mode        = "provisioned" # serverless v2 also uses provisioned mode
@@ -77,6 +79,7 @@ resource "aws_rds_cluster" "this" {
 }
 
 resource "aws_rds_cluster_instance" "this" {
+  # checkov:skip=CKV_AWS_354:CMK encryption for Performance Insights is available via performance_insights_kms_key_id; the default uses the AWS-managed key
   count = var.instance_count
 
   identifier         = "${var.cluster_name}-instance-${count.index + 1}"
@@ -93,6 +96,40 @@ resource "aws_rds_cluster_instance" "this" {
 
   performance_insights_enabled          = var.performance_insights_enabled
   performance_insights_retention_period = var.performance_insights_enabled ? var.performance_insights_retention_period : null
+  performance_insights_kms_key_id       = var.performance_insights_enabled ? var.performance_insights_kms_key_id : null
+
+  monitoring_interval = var.enhanced_monitoring_interval
+  monitoring_role_arn = var.enhanced_monitoring_interval > 0 ? aws_iam_role.enhanced_monitoring[0].arn : null
 
   tags = var.tags
+}
+
+# ---------------------------------------------------------------------------
+# IAM role for RDS Enhanced Monitoring (created when the interval > 0)
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "enhanced_monitoring" {
+  count = var.enhanced_monitoring_interval > 0 ? 1 : 0
+
+  name = "${var.cluster_name}-rds-monitoring-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect    = "Allow"
+        Principal = { Service = "monitoring.rds.amazonaws.com" }
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = var.tags
+}
+
+resource "aws_iam_role_policy_attachment" "enhanced_monitoring" {
+  count = var.enhanced_monitoring_interval > 0 ? 1 : 0
+
+  role       = aws_iam_role.enhanced_monitoring[0].name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole"
 }

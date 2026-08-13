@@ -10,5 +10,6 @@
   cluster parameters support
 - Dedicated security group with granular ingress rules per source SG/CIDR
 - Encryption at rest, deletion protection and final snapshot by default
-- Performance Insights, CloudWatch log exports and IAM database
-  authentication support
+- Performance Insights (optional CMK), Enhanced Monitoring with
+  auto-created IAM role, CloudWatch log exports and IAM database
+  authentication enabled by default

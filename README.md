@@ -10,7 +10,7 @@ Terraform module to create an Amazon Aurora PostgreSQL cluster in provisioned or
 - Parameter group family derived from the engine version, with custom cluster parameters support
 - Dedicated security group with granular ingress rules per source SG and/or CIDR (modern `aws_vpc_security_group_*_rule` resources)
 - Storage encryption (default `aws/rds` key or custom KMS), deletion protection and final snapshot enabled by default
-- Performance Insights, CloudWatch log exports and optional IAM database authentication
+- Performance Insights (optional CMK encryption), Enhanced Monitoring with auto-created IAM role, CloudWatch log exports and IAM database authentication enabled by default
 - Cross-field validations: instance class required for provisioned, capacity ranges, password requirements
 
 ## Usage
@@ -74,6 +74,8 @@ module "aurora" {
 | aws_vpc_security_group_ingress_rule.from_security_groups | resource |
 | aws_vpc_security_group_ingress_rule.from_cidr_blocks | resource |
 | aws_vpc_security_group_egress_rule.all_outbound | resource |
+| aws_iam_role.enhanced_monitoring | resource |
+| aws_iam_role_policy_attachment.enhanced_monitoring | resource |
 
 ## Inputs
 
@@ -86,7 +88,7 @@ module "aurora" {
 | master_username | Master username | `string` | n/a | yes |
 | manage_master_user_password | Manage password in Secrets Manager | `bool` | `true` | no |
 | master_password | Explicit password (fallback) | `string` | `null` | no |
-| iam_database_authentication_enabled | IAM DB auth | `bool` | `false` | no |
+| iam_database_authentication_enabled | IAM DB auth | `bool` | `true` | no |
 | engine_version | Engine version | `string` | `null` | no |
 | parameter_group_family | Family override | `string` | `null` (derived) | no |
 | cluster_parameters | Custom cluster parameters | `list(object)` | `[]` | no |
@@ -109,6 +111,8 @@ module "aurora" {
 | enabled_cloudwatch_logs_exports | Logs to export | `list(string)` | `["postgresql"]` | no |
 | performance_insights_enabled | Performance Insights | `bool` | `true` | no |
 | performance_insights_retention_period | PI retention (days) | `number` | `7` | no |
+| performance_insights_kms_key_id | CMK for PI encryption | `string` | `null` | no |
+| enhanced_monitoring_interval | Enhanced Monitoring seconds (0 = off) | `number` | `60` | no |
 | tags | Tags for all resources | `map(string)` | `{}` | no |
 
 ## Outputs
