@@ -2,31 +2,28 @@ provider "aws" {
   region = var.region
 }
 
-module "aurora_serverless" {
+module "aurora" {
   source = "../../"
 
-  cluster_name = "example-aurora"
-  cluster_type = "serverlessv2"
+  cluster_name = var.cluster_name
+  cluster_type = var.cluster_type
 
-  engine_version = "16.4"
-  database_name  = "appdb"
+  engine_version = var.engine_version
+  database_name  = var.database_name
 
   vpc_id  = var.vpc_id
-  subnets = var.private_subnet_ids
+  subnets = var.subnets
 
-  # Credentials in Secrets Manager (no password in code or state)
-  master_username             = "dbadmin"
+  master_username             = var.master_username
   manage_master_user_password = true
 
-  # 1 writer + 1 reader, both serverless
-  instance_count             = 2
-  serverless_v2_min_capacity = 0.5
-  serverless_v2_max_capacity = 8
+  instance_count = var.instance_count
+  instance_class = var.instance_class
 
-  inbound_sg_permitted = [var.app_security_group_id]
+  serverless_v2_min_capacity = var.serverless_v2_min_capacity
+  serverless_v2_max_capacity = var.serverless_v2_max_capacity
 
-  tags = {
-    Project   = "example"
-    ManagedBy = "terraform"
-  }
+  inbound_sg_permitted = var.inbound_sg_permitted
+
+  tags = var.tags
 }

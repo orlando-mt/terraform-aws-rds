@@ -6,15 +6,13 @@ Creates an Aurora PostgreSQL Serverless v2 cluster with:
 - Credentials managed by AWS Secrets Manager
 - Access restricted to the application's security group
 
-For a provisioned cluster, set `cluster_type = "provisioned"` and an
-`instance_class` (e.g. `db.r6g.large`).
+Switching to a provisioned cluster is a two-line change in
+[`terraform.tfvars`](./terraform.tfvars) — see the commented block there.
 
 ## Usage
 
 ```bash
 terraform init
-terraform apply \
-  -var "vpc_id=vpc-xxxx" \
-  -var 'private_subnet_ids=["subnet-a","subnet-b"]' \
-  -var "app_security_group_id=sg-cccc"
+terraform plan
+terraform apply
 ```
